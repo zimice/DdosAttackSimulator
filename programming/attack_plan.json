@@ -1,0 +1,34 @@
+{
+  "attacks": [
+    {
+      "attack_type": "ICMPFlood",
+      "target_ip": "127.0.0.1",
+      "parameters": { "duration": 5 },
+      "start_time": null
+    },
+    {
+      "attack_type": "SynFloodAttack",
+      "target_ip": "127.0.0.1",
+      "parameters": { "target_port": 80, "duration": 5 },
+      "start_time": "2025-03-01T12:30:00+00:00"
+    },
+    {
+      "attack_type": "UDPFlood",
+      "target_ip": "127.0.0.1",
+      "parameters": { "target_port": 53, "duration": 5, "packet_size": 512 },
+      "start_time": null
+    },
+    {
+      "attack_type": "HTTPFlood",
+      "target_ip": "127.0.0.1",
+      "parameters": { "target_port": 80, "duration": 5, "requests_per_second": 100 },
+      "start_time": null
+    },
+    {
+      "attack_type": "SlowLorisAttack",
+      "target_ip": "127.0.0.1",
+      "parameters": { "target_port": 80, "duration": 5 },
+      "start_time": null
+    }
+  ]
+}

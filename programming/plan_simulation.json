@@ -1,0 +1,33 @@
+{
+    "attacks": [
+      {
+        "attack_type": "ICMPFlood",
+        "target_ip": "192.168.2.229",
+        "parameters": {
+          "duration": 15
+        },
+        "start_time": null
+      },
+      {
+        "attack_type": "HTTPFlood",
+        "target_ip": "192.168.2.229",
+        "parameters": {
+          "target_port": 80,
+          "duration": 30,
+          "path": "/",
+          "read_reply": false
+        },
+        "start_time": null
+      },
+      {
+        "attack_type": "SynFloodAttack",
+        "target_ip": "192.168.2.229",
+        "parameters": {
+          "target_port": 80,
+          "duration": 25
+        },
+        "start_time": null
+      }
+    ]
+  }
+  

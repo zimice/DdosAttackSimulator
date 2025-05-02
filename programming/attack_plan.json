@@ -17,7 +17,7 @@
         "target_port": 80,
         "path": "/",
         "read_reply": false,
-        "threads": 50
+        "threads": 200
       },
       "start_time": null
     },
@@ -27,7 +27,7 @@
       "parameters": {
         "duration": 60,
         "target_port": 80,
-        "threads": 4
+        "threads": 100
       },
       "start_time": null
     }

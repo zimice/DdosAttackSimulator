@@ -56,7 +56,8 @@ def monitor(args: argparse.Namespace) -> None:
         samples = deque()           # for summary
 
         while (elapsed := time.perf_counter() - start) < args.dur:
-            now = datetime.datetime.now()
+            now_loop_start = time.perf_counter()
+            now   = datetime.datetime.now()
             datum, cas = now.date().isoformat(), now.time().strftime("%H:%M:%S")
 
             # CPU & RAM
@@ -73,7 +74,7 @@ def monitor(args: argparse.Namespace) -> None:
 
             # health check
             try:
-                requests.get(args.url, timeout=2).raise_for_status()
+                requests.get(args.url, timeout=0.3).raise_for_status()
                 status = "Funkcni"
             except Exception:
                 status = "Vypadek"
@@ -83,7 +84,8 @@ def monitor(args: argparse.Namespace) -> None:
             fh.flush()
             samples.append((cpu, ram, net))
 
-            time.sleep(args.int)
+            loop_spent = time.perf_counter() - now_loop_start
+            time.sleep(max(0, args.int - loop_spent))
 
     # ───── summary ─────
     if samples:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-lead.py
+leader.py
 
-Lead server for the *Distributed DDoS Attack Simulator* bachelor-thesis project.
+Leader server for the *Distributed DDoS Attack Simulator* bachelor-thesis project.
 
 DISCLAIMER:  
 This tool is designed strictly for educational purposes and controlled network security testing.
@@ -37,7 +37,7 @@ from plan                    import Plan
 # Dataclass configuration                                                     #
 # --------------------------------------------------------------------------- #
 @dataclass
-class LeadConfig:
+class LeaderConfig:
     host: str  = "127.0.0.1"
     port: int  = 9999
     plan_file: Path = Path("attack_plan.json")
@@ -49,16 +49,16 @@ class LeadConfig:
 
 
 # --------------------------------------------------------------------------- #
-# Lead implementation
+# Leader implementation
 # --------------------------------------------------------------------------- #
 
-class Lead:
+class Leader:
     """Serve attack-plan JSON / hash to connecting Bot clients."""
 
     # --------------------------------------------------------------------- #
     # Constructor & top‑level control                                       #
     # --------------------------------------------------------------------- #
-    def __init__(self, cfg: LeadConfig) -> None:
+    def __init__(self, cfg: LeaderConfig) -> None:
         self.cfg = cfg
         self.log = self._make_logger()
 
@@ -70,9 +70,9 @@ class Lead:
     def start(self) -> None:
         """Block - accept connections until exit command or Ctrl-C."""
         self.running = True
-        self.log.info("Lead listening on %s:%s", self.cfg.host, self.cfg.port)
+        self.log.info("Leader listening on %s:%s", self.cfg.host, self.cfg.port)
         if self.cfg.print_info:
-            print(f"Lead server running at {self.cfg.host}:{self.cfg.port}")
+            print(f"Leader server running at {self.cfg.host}:{self.cfg.port}")
 
         # console thread listening for shutdown
         threading.Thread(target=self._exit_listener,name="ExitListener",daemon=True).start()
@@ -102,7 +102,7 @@ class Lead:
         if self.cfg.no_trace:
             return DetailedLogger(enable_logging=False)
         level = logging.DEBUG if self.cfg.debug else logging.INFO
-        return DetailedLogger("lead_log.log", log_level=level)
+        return DetailedLogger("leader_log.log", log_level=level)
 
     # ------------------------------------------------------------------ #
     def _load_plan(self, plan_path: Path) -> Plan:
@@ -169,9 +169,9 @@ class Lead:
 # --------------------------------------------------------------------------- #
 # CLI helper                                                                  #
 # --------------------------------------------------------------------------- #
-def parse_cli() -> LeadConfig:
+def parse_cli() -> LeaderConfig:
     p = argparse.ArgumentParser(
-        description="Lead server for the Distributed DDoS Attack Simulator")
+        description="Leader server for the Distributed DDoS Attack Simulator")
     p.add_argument("-H", "--host", default="127.0.0.1",
                    help="Bind address (default 127.0.0.1)")
     p.add_argument("-P", "--port", type=int, default=9999,
@@ -188,7 +188,7 @@ def parse_cli() -> LeadConfig:
                    help="Disable all logging / printing")
 
     ns = p.parse_args()
-    return LeadConfig(
+    return LeaderConfig(
         host       = ns.host,
         port       = ns.port,
         plan_file  = Path(ns.plan),
@@ -204,4 +204,4 @@ def parse_cli() -> LeadConfig:
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     cfg = parse_cli()
-    Lead(cfg).start()
+    Leader(cfg).start()

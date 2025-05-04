@@ -34,8 +34,8 @@ from plan   import Plan
 
 @dataclass
 class BotConfig:
-    lead_ip: str = "127.0.0.1"
-    lead_port: int = 9999
+    leader_ip: str = "127.0.0.1"
+    leader_port: int = 9999
     debug: bool = False
     log_file: Path = Path("bot_log.log")
 
@@ -44,7 +44,7 @@ class BotConfig:
 # --------------------------------------------------------------------------- #
 
 class Bot:
-    """Connects to a Lead server, downloads an attack plan, and executes it."""
+    """Connects to a Leader server, downloads an attack plan, and executes it."""
 
     # --------------------------------------------------------------------- #
     # Constructor & top‑level control                                       #
@@ -53,7 +53,7 @@ class Bot:
     def __init__(self, cfg: BotConfig) -> None:
         self.cfg       = cfg
         self.logger    = self._make_logger()
-        self.plan_hash = ""              # filled after first connection to Lead
+        self.plan_hash = ""              # filled after first connection to Leader
         self.stop_evt  = threading.Event()    # global stop (Ctrl-C, after plan)
         self.attack_evt = threading.Event()   # interrupt running attacks
 
@@ -88,11 +88,11 @@ class Bot:
         return DetailedLogger(str(self.cfg.log_file), log_level=level)
 
     # --------------------------------------------------------------------- #
-    # Lead communication helpers
+    # Leader communication helpers
     def _fetch_plan(self) -> str:
         """TCP request: opcode 0 full plan JSON."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.cfg.lead_ip, self.cfg.lead_port))
+            s.connect((self.cfg.leader_ip, self.cfg.leader_port))
             s.sendall(b"0")
             chunks: List[bytes] = []
             while (blk := s.recv(4096)):
@@ -102,7 +102,7 @@ class Bot:
     def _fetch_plan_hash(self) -> str:
         """TCP request: opcode 1  64-byte hex SHA-256 digest."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.cfg.lead_ip, self.cfg.lead_port))
+            s.connect((self.cfg.leader_ip, self.cfg.leader_port))
             s.sendall(b"1")
             return s.recv(64).decode()
 
@@ -167,12 +167,12 @@ class Bot:
     @staticmethod
     def parse_cli(argv: List[str]) -> BotConfig:
         p = argparse.ArgumentParser(description="Bot client for the Distributed DDoS Attack Simulator")
-        p.add_argument("lead_ip",   nargs="?", default="127.0.0.1",help="Lead server host (default 127.0.0.1)")
-        p.add_argument("lead_port", nargs="?", type=int, default=9999,help="Lead TCP port (default 9999)")
+        p.add_argument("leader_ip",   nargs="?", default="127.0.0.1",help="Leader server host (default 127.0.0.1)")
+        p.add_argument("leader_port", nargs="?", type=int, default=9999,help="Leader TCP port (default 9999)")
         p.add_argument("-d", "--debug", action="store_true",help="Enable DEBUG logging")
         ns = p.parse_args(argv)
 
-        return BotConfig(ns.lead_ip, ns.lead_port, ns.debug)
+        return BotConfig(ns.leader_ip, ns.leader_port, ns.debug)
 
 # --------------------------------------------------------------------------- #
 # Script entry-point                                                          #

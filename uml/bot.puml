@@ -1,0 +1,20 @@
+@startuml
+title Bot – zjednodušený hlavní cyklus
+
+start
+:Načíst CLI, nastavit logger;
+
+while (běh programu)
+  :Stáhnout aktuální plán (opcode 0);\nuložit hash_plánu;
+
+  fork
+    :Vlákno **Heartbeat**\n– každé 3–5 min stáhne hash;\n je-li jiný ⇒ nastaví flag _nový_plán_;
+  fork again
+    :Vlákno **Útoky**\n– postupně provádí\nvšechny útoky podle plánu\n(každý může spouštět\nvlastní pracovní vlákna);
+  end fork
+
+  :Čekat, dokud\n- neběží žádný útok **a současně**\n- není flag _nový_plán_ false\n(případně Ctrl-C ukončí smyčku);
+endwhile
+
+stop
+@enduml

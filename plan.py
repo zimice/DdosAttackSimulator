@@ -1,7 +1,7 @@
 """
 plan.py
 
-Define the Plan class (serialize / deserialize) **and** provide a stable
+Define the Plan class (serialize / deserialize) and provide a stable
 SHA-256 hash for integrity checks.
 """
 
@@ -17,7 +17,7 @@ from attacks.SlowLorisAttack  import SlowLorisAttack
 
 
 class Plan:
-    """A collection of attack objects with JSON <-> object helpers."""
+    """A collection of attack objects with JSON object helpers."""
 
     # ------------------------------------------------------------------ #
     def __init__(self, attack_objs: list) -> None:

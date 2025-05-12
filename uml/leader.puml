@@ -1,0 +1,20 @@
+@startuml
+
+start
+:Získat parametry z příkazové řádky;
+:Načíst plán útoku nebo vytvořit záložní;
+:Založit TCP socket pro příchozí spojení;
+while (server aktivní)
+  :Čekat na spojení (timeout 1 s);
+  if (Spojení navázáno?) then (ano)
+    :Načíst jeden řídicí bajt;
+    if (Bajt == 1?) then (žádost o hash)
+      :Odeslat SHA-256 hash plánu;
+    else (žádost o plán)
+      :Odeslat JSON se scénářem útoku;
+    endif
+  endif
+endwhile
+stop
+
+@enduml

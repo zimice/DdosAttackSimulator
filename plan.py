@@ -9,11 +9,11 @@ from __future__ import annotations
 import json
 import hashlib
 from datetime import datetime
-from attacks.SynFloodAttack   import SynFloodAttack
-from attacks.ICMPFlood        import ICMPFlood
-from attacks.HTTPFlood        import HTTPFlood
-from attacks.UDPFlood         import UDPFlood
-from attacks.SlowLorisAttack  import SlowLorisAttack
+from attacks.SynFloodAttack import SynFloodAttack
+from attacks.ICMPFlood import ICMPFlood
+from attacks.HTTPFlood import HTTPFlood
+from attacks.UDPFlood import UDPFlood
+from attacks.SlowLorisAttack import SlowLorisAttack
 
 
 class Plan:

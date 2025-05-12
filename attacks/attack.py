@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+
 class Attack(ABC):
     """
     Abstract base class for all attack types.
@@ -24,18 +25,19 @@ class Attack(ABC):
         start_time (datetime): The scheduled start time for the attack (UTC).If None, defaults to the current time in UTC.
     """
     # ------------------------------------------------------------------ #
-    def __init__(self,target_ip: str,parameters: Dict[str, Any] | None = None,start_time: Optional[datetime] = None,) -> None:
-        self.target_ip   = target_ip
-        self.parameters  = parameters or {}
+
+    def __init__(self, target_ip: str, parameters: Dict[str, Any] | None = None, start_time: Optional[datetime] = None,) -> None:
+        self.target_ip = target_ip
+        self.parameters = parameters or {}
         self.threads: int = int(self.parameters.get("threads", 1))
-        self.start_time  = start_time or datetime.now(timezone.utc)
-            
+        self.start_time = start_time or datetime.now(timezone.utc)
+
     # ------------------------------------------------------------------ #
     @abstractmethod
     def execute(self):
         """Abstract method to execute the attack. Must be implemented by subclasses."""
         pass
-    
+
     # ------------------------------------------------------------------ #
     def wait_until_start(self) -> None:
         """Block until self.start_time (UTC) is reached."""

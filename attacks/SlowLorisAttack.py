@@ -21,6 +21,7 @@ import time
 
 from attacks.attack import Attack
 
+
 class SlowLorisAttack(Attack):
     """Keeps many partial HTTP connections open to exhaust the server's worker pool."""
 
@@ -29,15 +30,15 @@ class SlowLorisAttack(Attack):
         """Open/maintain `connection_count` sockets for `duration` seconds."""
         self.wait_until_start()
 
-        port      = int(self.parameters.get("target_port", 80))
-        duration  = int(self.parameters.get("duration", 10))
-        conn_cnt  = int(self.parameters.get("connection_count", 50))
+        port = int(self.parameters.get("target_port", 80))
+        duration = int(self.parameters.get("duration", 10))
+        conn_cnt = int(self.parameters.get("connection_count", 50))
 
         self._slowloris(self.target_ip, port, duration, conn_cnt)
 
     # ------------------------------------------------------------------ #
     @staticmethod
-    def _slowloris(target_ip: str,target_port: int,duration: int,conn_cnt: int) -> None:
+    def _slowloris(target_ip: str, target_port: int, duration: int, conn_cnt: int) -> None:
         """
         Maintain *conn_cnt* half-open HTTP sockets for *duration* seconds.
 

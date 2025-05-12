@@ -18,12 +18,23 @@ Parameter summary
 
 """
 from __future__ import annotations
-import argparse, csv, time, datetime, pathlib, psutil, requests, os, sys
+import argparse
+import csv
+import time
+import datetime
+import pathlib
+import psutil
+import requests
+import os
+import sys
 from collections import deque
 
 # ─────────────── helpers ──────────────────────────────────────────────
+
+
 def mbps(bytes_delta: int, seconds: float) -> float:
     return bytes_delta * 8 / 1024 / 1024 / seconds
+
 
 def bot_count() -> int:
     try:
@@ -35,6 +46,8 @@ def bot_count() -> int:
         return 0
 
 # ─────────────── main routine ─────────────────────────────────────────
+
+
 def monitor(args: argparse.Namespace) -> None:
     csv_path = args.out or pathlib.Path(
         f"data_{datetime.datetime.now():%Y%m%d_%H%M%S}.csv"
@@ -57,7 +70,7 @@ def monitor(args: argparse.Namespace) -> None:
 
         while (elapsed := time.perf_counter() - start) < args.dur:
             now_loop_start = time.perf_counter()
-            now   = datetime.datetime.now()
+            now = datetime.datetime.now()
             datum, cas = now.date().isoformat(), now.time().strftime("%H:%M:%S")
 
             # CPU & RAM
@@ -79,7 +92,8 @@ def monitor(args: argparse.Namespace) -> None:
             except Exception:
                 status = "Vypadek"
 
-            row = [datum, cas, bot_count(), f"{cpu:.0f}", f"{ram:.0f}", f"{net:.2f}", status]
+            row = [datum, cas, bot_count(
+            ), f"{cpu:.0f}", f"{ram:.0f}", f"{net:.2f}", status]
             writer.writerow(row)
             fh.flush()
             samples.append((cpu, ram, net))
@@ -100,14 +114,22 @@ def monitor(args: argparse.Namespace) -> None:
     print(f"CSV saved → {csv_path}")
 
 # ─────────────── CLI ──────────────────────────────────────────────────
+
+
 def parse_cli() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Resource-monitor to CSV")
-    p.add_argument("-d", "--dur",  type=int,   default=300,   help="duration seconds (default 300)")
-    p.add_argument("-i", "--int",  type=float, default=1.0,   help="sample interval seconds (default 1)")
-    p.add_argument("-n", "--nic",  default="eth0",            help="network interface (default eth0)")
-    p.add_argument("-u", "--url",  default="http://localhost",help="URL for health probe")
-    p.add_argument("-o", "--out",  type=pathlib.Path,         help="output CSV path")
+    p.add_argument("-d", "--dur",  type=int,   default=300,
+                   help="duration seconds (default 300)")
+    p.add_argument("-i", "--int",  type=float, default=1.0,
+                   help="sample interval seconds (default 1)")
+    p.add_argument("-n", "--nic",  default="eth0",
+                   help="network interface (default eth0)")
+    p.add_argument("-u", "--url",  default="http://localhost",
+                   help="URL for health probe")
+    p.add_argument("-o", "--out",  type=pathlib.Path,
+                   help="output CSV path")
     return p.parse_args()
+
 
 if __name__ == "__main__":
     monitor(parse_cli())

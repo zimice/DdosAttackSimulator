@@ -3,6 +3,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from types import MethodType
 
+
 class DetailedLogger:
     """
     Thin wrapper around Python's logging module with an optional
@@ -23,7 +24,7 @@ class DetailedLogger:
                 setattr(self, level, MethodType(lambda *_, **__: None, self))
             return  # nothing else to configure
 
-        # Normal logging setup ↓
+        # Normal logging setup
         self.logger = logging.getLogger(log_file)
         self.logger.setLevel(log_level)
 
@@ -40,8 +41,8 @@ class DetailedLogger:
         self.logger.addHandler(handler)
 
         # delegate convenience wrappers
-        self.debug     = self.logger.debug
-        self.info      = self.logger.info
-        self.warning   = self.logger.warning
-        self.error     = self.logger.error
-        self.critical  = self.logger.critical
+        self.debug = self.logger.debug
+        self.info = self.logger.info
+        self.warning = self.logger.warning
+        self.error = self.logger.error
+        self.critical = self.logger.critical

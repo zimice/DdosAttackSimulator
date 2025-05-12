@@ -133,7 +133,7 @@ Each attack can include an optional `start_time` (in ISO 8601 format with timezo
 
 ## License
 
-This project is licensed under the MIT License? - TODO: TO be confirmed
+This project is licensed under the MIT License
 
 ## Contributing
 
